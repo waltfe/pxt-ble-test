@@ -9,8 +9,7 @@ namespace ConnectTest {
     //% blockId="conntest" block="conntest"
     //% shim=ble::main
     //% parts=ble trackArgs=0
-    export function test() : number {
-        return 32.6;
+    export function test() : void {
     }
     //% blockId="test" block="test"
     //% shim=ble::main

@@ -77,7 +77,7 @@ namespace BluetoothInteraction {
             checksum += msg[i];
         }
         buf[msg.length - 1] = checksum & 0xFF;
-        bluetooth.uartReadBuffer(buf); // 向蓝牙设备写数据
+        bluetooth.uartWriteBuffer(buf); // 向蓝牙设备写数据
 
     }
 
@@ -101,8 +101,64 @@ namespace BluetoothInteraction {
         return [1];
     }
 
+    /**
+     * 读取超声波传检测到的距离
+     * @param msg[0] RJ11接口编号[1-4]
+     * @return [1] 距离高8位
+     * @return [0] 距离低8位
+     * @return 返回距离(厘米)，0表示无障碍物，检测范围2-430cm
+     */
+    function readUltrasonicSensor(msg: number[]): number[] {
 
-    
+        let Rjpin = msg[0];
+        let pinT = DigitalPin.P1
+        let pinE = DigitalPin.P2
+        switch (Rjpin) {
+            case 1:
+                pinT = DigitalPin.P1
+                pinE = DigitalPin.P8
+                break;
+            case 2:
+                pinT = DigitalPin.P2
+                pinE = DigitalPin.P12
+                break;
+            case 3:
+                pinT = DigitalPin.P13
+                pinE = DigitalPin.P14
+                break;
+            case 4:
+                pinT = DigitalPin.P15
+                pinE = DigitalPin.P16
+                break;
+        }
+        pins.setPull(pinT, PinPullMode.PullNone)
+        pins.digitalWritePin(pinT, 0)
+        control.waitMicros(2)
+        pins.digitalWritePin(pinT, 1)
+        control.waitMicros(10)
+        pins.digitalWritePin(pinT, 0)
+
+        // read pulse
+        let d = pins.pulseIn(pinE, PulseValue.High, 25000)
+        let distance = d * 34 / 2 / 1000
+        if (distance > 430) {
+            distance = 0
+        }
+        distance = Math.floor(distance)
+        return [distance & 0xFF, (distance >> 8) & 0xFF]  //cm
+    }
+
+    /**
+     * 读取光线传感器数值
+     * @param msg[0] RJ11接口编号[1-4]
+     * @return [1] 亮度值高8位
+     * @return [0] 亮度值低8位
+     * @return 亮度值(lux)
+     */
+    function readLightSensor(msg: number[]): number[] {
+        return [0]
+    }
+
 
     /**
      * 初始化蓝牙模块
@@ -133,6 +189,8 @@ namespace BluetoothInteraction {
             })
 
             bleCommandHandle[0x01] = ledToggle;
+            bleCommandHandle[0x02] = readUltrasonicSensor;
+            bleCommandHandle[0x03] = readLightSensor;
 
             bleInitFlag = 1;
         }

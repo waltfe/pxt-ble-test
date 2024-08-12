@@ -6,13 +6,13 @@
 //% color=#00B1ED  icon="\uf005" block="BluetoothInteraction" blockId="BluetoothInteraction"
 namespace BluetoothInteraction {
 
-    let bleInitFlag = 0;
-    let bleConnFalg = 0;
-    let bleMsgState = 0;
-    let bleMsgCode = 0;
-    let bleMsgLength = 0;
-    let bleMsgBuf = [];
-    let bleMsgBufIndex = 0;
+    let bleInitFlag: number = 0;
+    let bleConnFalg: number = 0;
+    let bleMsgState: number = 0;
+    let bleMsgCode: number = 0;
+    let bleMsgLength: number = 0;
+    let bleMsgBuf:number[] = [];
+    let bleMsgBufIndex: number = 0;
 
     function handleBluetoothData(data: number) {
         switch (bleMsgState) {
@@ -47,7 +47,7 @@ namespace BluetoothInteraction {
                     checksum += bleMsgBuf[i];
                 }
                 // 指令校验通过，调用对应函数
-                if (data == checksum & 0xFF) {
+                if (data == (checksum & 0xFF)) {
                     handleBleCommand(bleMsgCode, bleMsgBuf);
                 }
                 break;
@@ -56,7 +56,7 @@ namespace BluetoothInteraction {
         }
     }
 
-    function handleBleCommand(code, msg) {
+    function handleBleCommand(code:number, msg:number[]) {
         switch (code) {
             case 0x1:
                 break;

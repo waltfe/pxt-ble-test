@@ -4,13 +4,11 @@
     "description": "",
     "dependencies": {
         "core": "*",
-        "radio": "*",
+        "bluetooth": "*",
         "microphone": "*"
     },
     "files": [
         "README.md",
-        "main.blocks",
-        "ble.cpp",
         "main.ts"
     ],
     "testFiles": [

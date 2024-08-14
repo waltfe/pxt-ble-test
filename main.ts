@@ -73,10 +73,10 @@ namespace BluetoothInteraction {
             buf[7 + i] = msg[i];
         }
         let checksum = 0;
-        for (let i = 0; i < msg.length - 1; i++) {
+        for (let i = 0; i < buf.length - 1; i++) {
             checksum += msg[i];
         }
-        buf[msg.length - 1] = checksum & 0xFF;
+        buf[buf.length - 1] = checksum & 0xFF;
         bluetooth.uartWriteBuffer(buf); // 向蓝牙设备写数据
 
     }
@@ -91,10 +91,11 @@ namespace BluetoothInteraction {
     }
 
     /**
+     * CMD = 0x01
      * 翻转LED灯
      * @param msg[0] led x坐标
      * @param msg[1] led y坐标
-     * @returns 返回1
+     * @returns 返回1代表成功
      */
     function ledToggle(msg: number[]): number[] {
         led.toggle(msg[0], msg[1]);
@@ -102,6 +103,7 @@ namespace BluetoothInteraction {
     }
 
     /**
+     * CMD = 0x02 
      * 读取超声波传检测到的距离
      * @param msg[0] RJ11接口编号[1-4]
      * @return [1] 距离高8位
@@ -145,10 +147,11 @@ namespace BluetoothInteraction {
             distance = 0
         }
         distance = Math.floor(distance)
-        return [distance & 0xFF, (distance >> 8) & 0xFF]  //cm
+        return [(distance >> 8) & 0xFF, distance & 0xFF]  //cm
     }
 
     /**
+     * CMD = 0x03
      * 读取光线传感器数值
      * @param msg[0] RJ11接口编号[1-4]
      * @return [1] 亮度值高8位
@@ -156,7 +159,23 @@ namespace BluetoothInteraction {
      * @return 亮度值(lux)
      */
     function readLightSensor(msg: number[]): number[] {
-        return [0]
+        let pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
+        let voltage = 0;
+        for (let index = 0; index < 200; index++) {
+            voltage = voltage + pins.analogReadPin(pin)
+            control.waitMicros(10)
+        }
+
+        voltage /= 200
+
+        if (voltage < 200) {
+            voltage = Math.map(voltage, 12, 180, 0, 1600)
+        } else {
+            voltage = Math.map(voltage, 181, 1023, 1601, 14000)
+        }
+
+        voltage = Math.round(Math.max(0, voltage))
+        return [(voltage >> 8) & 0xFF, voltage & 0xFF]  //lux
     }
 
 
@@ -191,7 +210,6 @@ namespace BluetoothInteraction {
             bleCommandHandle[0x01] = ledToggle;
             bleCommandHandle[0x02] = readUltrasonicSensor;
             bleCommandHandle[0x03] = readLightSensor;
-
             bleInitFlag = 1;
         }
     }

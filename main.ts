@@ -105,7 +105,7 @@ namespace BluetoothInteraction {
     /**
      * CMD = 0x02 
      * 读取超声波传检测到的距离
-     * @param msg[0] RJ11接口编号[1-4]
+     * @param msg[0] RJ11接口编号[1-2]
      * @return [1] 距离高8位
      * @return [0] 距离低8位
      * @return 返回距离(厘米)，0表示无障碍物，检测范围2-430cm
@@ -152,7 +152,7 @@ namespace BluetoothInteraction {
 
     /**
      * CMD = 0x03
-     * 读取光线传感器数值
+     * 读取噪声传感器数值
      * @param msg[0] RJ11接口编号[1-4]
      * @return [1] 亮度值高8位
      * @return [0] 亮度值低8位
@@ -176,6 +176,160 @@ namespace BluetoothInteraction {
 
         voltage = Math.round(Math.max(0, voltage))
         return [(voltage >> 8) & 0xFF, voltage & 0xFF]  //lux
+    }
+
+    /**
+     * CMD = 0x04
+     * 读取噪音传感器数值
+     * @param msg[0] RJ11接口编号[1-2]
+     * @return [0] 噪音值 0-120
+     */
+    function readNoiseSensor(msg: number[]): number[] {
+        let pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
+        let level = 0, voltage = 0, noise = 0, h = 0, l = 0, sumh = 0, suml = 0
+        for (let i = 0; i < 1000; i++) {
+            level = level + pins.analogReadPin(pin)
+        }
+        level = level / 1000
+        for (let i = 0; i < 1000; i++) {
+            voltage = pins.analogReadPin(pin)
+            if (voltage >= level) {
+                h += 1
+                sumh = sumh + voltage
+            } else {
+                l += 1
+                suml = suml + voltage
+            }
+        }
+        if (h == 0) {
+            sumh = level
+        } else {
+            sumh = sumh / h
+        }
+        if (l == 0) {
+            suml = level
+        } else {
+            suml = suml / l
+        }
+        noise = sumh - suml
+        if (noise <= 4) {
+            noise = pins.map(
+                noise,
+                0,
+                4,
+                30,
+                50
+            )
+        } else if (noise <= 8) {
+            noise = pins.map(
+                noise,
+                4,
+                8,
+                50,
+                55
+            )
+        } else if (noise <= 14) {
+            noise = pins.map(
+                noise,
+                9,
+                14,
+                55,
+                60
+            )
+        } else if (noise <= 32) {
+            noise = pins.map(
+                noise,
+                15,
+                32,
+                60,
+                70
+            )
+        } else if (noise <= 60) {
+            noise = pins.map(
+                noise,
+                33,
+                60,
+                70,
+                75
+            )
+        } else if (noise <= 100) {
+            noise = pins.map(
+                noise,
+                61,
+                100,
+                75,
+                80
+            )
+        } else if (noise <= 150) {
+            noise = pins.map(
+                noise,
+                101,
+                150,
+                80,
+                85
+            )
+        } else if (noise <= 231) {
+            noise = pins.map(
+                noise,
+                151,
+                231,
+                85,
+                90
+            )
+        } else {
+            noise = pins.map(
+                noise,
+                231,
+                1023,
+                90,
+                120
+            )
+        }
+        return [Math.round(noise)]
+    }
+
+    /**
+     * CMD = 0x99
+     * 语音控制演示功能
+     * @param msg[0] 控制指令
+     * @returns 返回1代表成功
+     */
+    function audioControl(msg: number[]): number[] {
+        let buf = pins.createBuffer(8)
+        buf[0] = 0xFF;
+        buf[1] = 0xF9;
+        buf[2] = 0x01;
+        buf[3] = 0x01;
+        buf[4] = 0x60;
+        buf[6] = 0xF5;
+        buf[7] = 0x00;
+        switch (msg[0]) {
+            case 1:
+                pins.analogSetPeriod(AnalogPin.P1, 100)
+                pins.analogWritePin(AnalogPin.P1, 500)
+                break;
+            case 2:
+                pins.analogSetPeriod(AnalogPin.P1, 100)
+                pins.analogWritePin(AnalogPin.P1, 0)
+                break;
+            case 3:
+                buf[5] = 100;
+                pins.i2cWriteBuffer(0x10, buf);
+                break;
+            case 4:
+                buf[6] = 0;
+                pins.i2cWriteBuffer(0x10, buf);
+                break;
+            case 5:
+                pins.analogSetPeriod(AnalogPin.P2, 100)
+                pins.analogWritePin(AnalogPin.P2, 500)
+                break;
+            case 6:
+                pins.analogSetPeriod(AnalogPin.P2, 100)
+                pins.analogWritePin(AnalogPin.P2, 0)
+                break;
+        }
+        return [1];
     }
 
 
@@ -210,6 +364,8 @@ namespace BluetoothInteraction {
             bleCommandHandle[0x01] = ledToggle;
             bleCommandHandle[0x02] = readUltrasonicSensor;
             bleCommandHandle[0x03] = readLightSensor;
+            bleCommandHandle[0x04] = readNoiseSensor;
+            // bleCommandHandle[0x99] = audioControl;
             bleInitFlag = 1;
         }
     }

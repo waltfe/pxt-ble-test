@@ -14,6 +14,10 @@ namespace BluetoothInteraction {
     let bleMsgBufIndex: number = 0;
     let bleCommandHandle: { [key: number]: (param: number[]) => number[] } = {};
 
+    let timeout:number = 0
+    let __temperature: number = 0
+    let __humidity: number = 0
+
     function handleBluetoothData(data: number) {
         switch (bleMsgState) {
             case 0:
@@ -152,8 +156,8 @@ namespace BluetoothInteraction {
 
     /**
      * CMD = 0x03
-     * 读取噪声传感器数值
-     * @param msg[0] RJ11接口编号[1-4]
+     * 读取光线传感器数值
+     * @param msg[0] RJ11接口编号[1-2]
      * @return [1] 亮度值高8位
      * @return [0] 亮度值低8位
      * @return 亮度值(lux)
@@ -289,6 +293,172 @@ namespace BluetoothInteraction {
     }
 
     /**
+     * CMD = 0x05
+     * 读取土壤湿度传感器数值
+     * @param msg[0] RJ11接口编号[1-2]
+     * @return [0] 土壤湿度值 0-100
+     */
+    function readSoilHumiditySensor(msg: number[]): number[] {
+        let pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
+        let voltage = 0, soilmoisture = 0;
+        voltage = pins.map(
+            pins.analogReadPin(pin),
+            0,
+            1023,
+            0,
+            100
+        );
+        soilmoisture = 100 - voltage;
+        return [Math.round(soilmoisture)]
+    }
+
+    /**
+     * CMD = 0x06
+     * 读取温湿度传感器数值
+     * @param msg[0] RJ11接口编号[1-4]
+     * @return [0] 温度值 -40~85
+     * @return [1] 湿度值 0-100
+     */
+    function readDht11Sensor(msg: number[]): number[] {
+        //initialize
+        if (input.runningTime() >= timeout)
+        {
+            timeout = input.runningTime() + 2000
+        }
+        else
+        {
+            return [__temperature, __humidity]
+        }
+
+        let timeout_flag: number = 0
+        let _temperature: number = -999.0
+        let _humidity: number = -999.0
+        let checksum: number = 0
+        let checksumTmp: number = 0
+        let dataArray: boolean[] = []
+        let resultArray: number[] = []
+        let pin = DigitalPin.P1
+        switch (msg[0]) {
+            case 1:
+                pin = DigitalPin.P8
+                break;
+            case 2:
+                pin = DigitalPin.P12
+                break;
+            case 3:
+                pin = DigitalPin.P14
+                break;
+            case 4:
+                pin = DigitalPin.P16
+                break;
+         }
+        let i: number = 0
+        for (i = 0; i < 1; i++) {
+            for (let index = 0; index < 40; index++) dataArray.push(false)
+            for (let index = 0; index < 5; index++) resultArray.push(0)
+            pins.setPull(pin, PinPullMode.PullUp)
+            pins.digitalWritePin(pin, 0) //begin protocol, pull down pin
+            basic.pause(18)
+            pins.digitalWritePin(pin, 1) //pull up pin for 18us
+            pins.digitalReadPin(pin) //pull up pin
+            control.waitMicros(40)
+            if (!(waitDigitalReadPin(1, 9999, pin))) continue;
+            if (!(waitDigitalReadPin(0, 9999, pin))) continue;
+            //read data (5 bytes)
+
+            for (let index = 0; index < 40; index++) {
+                if (!(waitDigitalReadPin(0, 9999, pin))) {
+                    timeout_flag = 1
+                    break;
+                }
+                if (!(waitDigitalReadPin(1, 9999, pin))) {
+                    timeout_flag = 1
+                    break;
+                }
+                control.waitMicros(40)
+                //if sensor still pull up data pin after 28 us it means 1, otherwise 0
+                if (pins.digitalReadPin(pin) == 1) dataArray[index] = true
+            }
+
+            //convert byte number array to integer
+            for (let index = 0; index < 5; index++)
+                for (let index2 = 0; index2 < 8; index2++)
+                    if (dataArray[8 * index + index2]) resultArray[index] += 2 ** (7 - index2)
+            //verify checksum
+            checksumTmp = resultArray[0] + resultArray[1] + resultArray[2] + resultArray[3]
+            checksum = resultArray[4]
+            if (checksumTmp >= 512) checksumTmp -= 512
+            if (checksumTmp >= 256) checksumTmp -= 256
+            if (checksumTmp == checksum){
+                __temperature = resultArray[2] + resultArray[3] / 100
+                __humidity = resultArray[0] + resultArray[1] / 100
+                break;
+            }
+        }
+        return [__temperature, __humidity]
+    }
+
+    /**
+     * CMD = 0x07
+     * 读取PIR传感器数值
+     * @param msg[0] RJ11接口编号[1-4]
+     * @return [0] 运动检测结果[1:检测到运动,0:未检测到运动]
+     */
+    function readPIRSensor(msg: number[]): number[] {
+        //initialize
+        let pin = DigitalPin.P1
+        switch (msg[0]) {
+            case 1:
+                pin = DigitalPin.P8
+                break;
+            case 2:
+                pin = DigitalPin.P12
+                break;
+            case 3:
+                pin = DigitalPin.P14
+                break;
+            case 4:
+                pin = DigitalPin.P16
+                break;
+        }
+        return [pins.digitalReadPin(pin) == 1? 1 : 0]
+    }
+
+    /**
+     * CMD = 0x07
+     * 读取按钮CD传感器数值
+     * @param msg[0] RJ11接口编号[1-4]
+     * @return [0] 按钮C按下状态[0:按下,1:未按下] 
+     * @return [1] 按钮D按下状态[0:按下,1:未按下]
+     */
+    function readButtonCDSensor(msg: number[]): number[] {
+        //initialize
+        let pinC = DigitalPin.P1
+        let pinD = DigitalPin.P2
+        switch (msg[0]) {
+            case 1:
+                pinC = DigitalPin.P1
+                pinD = DigitalPin.P8
+                break;
+            case 2:
+                pinC = DigitalPin.P2
+                pinD = DigitalPin.P12
+                break;
+            case 3:
+                pinC = DigitalPin.P13
+                pinD = DigitalPin.P14
+                break;
+            case 4:
+                pinC = DigitalPin.P15
+                pinD = DigitalPin.P16
+                break;
+        }
+        pins.setPull(pinC, PinPullMode.PullUp)
+        pins.setPull(pinD, PinPullMode.PullUp)
+        return [pins.digitalReadPin(pinC), pins.digitalReadPin(pinD)] 
+    }
+
+    /**
      * CMD = 0x99
      * 语音控制演示功能
      * @param msg[0] 控制指令
@@ -365,6 +535,10 @@ namespace BluetoothInteraction {
             bleCommandHandle[0x02] = readUltrasonicSensor;
             bleCommandHandle[0x03] = readLightSensor;
             bleCommandHandle[0x04] = readNoiseSensor;
+            bleCommandHandle[0x05] = readSoilHumiditySensor;
+            bleCommandHandle[0x06] = readDht11Sensor;
+            bleCommandHandle[0x07] = readPIRSensor; 
+            bleCommandHandle[0x08] = readButtonCDSensor;
             // bleCommandHandle[0x99] = audioControl;
             bleInitFlag = 1;
         }

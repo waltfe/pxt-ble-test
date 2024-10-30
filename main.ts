@@ -210,7 +210,7 @@ namespace BluetoothInteraction {
         cmdWrite[26] = 0xff - (sum & 0xff);
         let tempbuf = pins.createBufferFromArray(cmdWrite)
         writeAndReadBuf(tempbuf, 16);
-    }
+    } 
 
     /**
      * CMD = 0x01

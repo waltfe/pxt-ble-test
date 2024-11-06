@@ -212,6 +212,16 @@ namespace BluetoothInteraction {
         writeAndReadBuf(tempbuf, 16);
     } 
 
+    function waitDigitalReadPin(state: number, timeout: number, pin:DigitalPin)
+    {
+        while (pins.digitalReadPin(pin) != state) {
+            if (!(--timeout)) {
+                return 0
+            }
+        };
+        return 1
+    }
+
     /**
      * CMD = 0x01
      * 翻转LED灯
@@ -579,6 +589,7 @@ namespace BluetoothInteraction {
     /**
      * CMD = 0x09
      * 读取RFID传感器是否检测到卡片
+     * @return [0] 检测到卡片[1:检测到卡片,0:未检测到卡片]
      */
     function RFIDreadCheckCard(): number[] {
         //initialize
@@ -609,7 +620,7 @@ namespace BluetoothInteraction {
     /**
      * CMD = 0x0A
      * 读取RFID传感器检测到的卡片的数据
-     * @return [0] and lenth等于1 0:读取成功,1:密码错误,2:读取失败
+     * @return [0] and lenth等于1 0:未找到NFC卡,1:密码错误,2:读取失败
      * @return [0-15] and lenth等于16 读取到的数据
      */
     function RFIDreadDataBlock(): number[] {
@@ -667,7 +678,7 @@ namespace BluetoothInteraction {
             len = 16
         }
         for (let i = 0; i < len; i++) {
-            blockData[i] = data.charCodeAt(i)
+            blockData[i] = data[i];
         }
         writeblock(blockData);
         return [1]

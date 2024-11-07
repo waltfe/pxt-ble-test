@@ -639,7 +639,6 @@ namespace BluetoothInteraction {
      */
     function RFIDreadDataBlock(): number[] {
         //initialize
-        serial.writeLine("AAAAAAA");
         if (NFC_ENABLE === 0) {
             wakeup();
         }
@@ -652,20 +651,20 @@ namespace BluetoothInteraction {
             serial.writeLine("passwd error!")
             return [1];
         }
-        // let cmdRead: number[] = []
-        // cmdRead = [0x00, 0x00, 0xff, 0x05, 0xfb, 0xD4, 0x40, 0x01, 0x30, 0x07, 0xB4, 0x00];
-        // let sum = 0, count = 0;
-        // cmdRead[9] = block_def;
-        // for (let i = 0; i < cmdRead.length - 2; i++) {
-        //     if ((i === 3) || (i === 4)) {
-        //         continue;
-        //     }
-        //     sum += cmdRead[i];
-        // }
-        // cmdRead[cmdRead.length - 2] = 0xff - sum & 0xff;
-        // let buf = pins.createBufferFromArray(cmdRead)
-        // writeAndReadBuf(buf, 31);
-        // let ret: number[]
+        let cmdRead: number[] = []
+        cmdRead = [0x00, 0x00, 0xff, 0x05, 0xfb, 0xD4, 0x40, 0x01, 0x30, 0x07, 0xB4, 0x00];
+        let sum = 0, count = 0;
+        cmdRead[9] = block_def;
+        for (let i = 0; i < cmdRead.length - 2; i++) {
+            if ((i === 3) || (i === 4)) {
+                continue;
+            }
+            sum += cmdRead[i];
+        }
+        cmdRead[cmdRead.length - 2] = 0xff - sum & 0xff;
+        let buf = pins.createBufferFromArray(cmdRead)
+        writeAndReadBuf(buf, 31);
+        let ret: number[]
         // if ((recvBuf[6] === 0xD5) && (recvBuf[7] === 0x41) && (recvBuf[8] === 0x00) && (checkDcs(31 - 4))) {
         //     for (let i = 0; i < 16; i++) {
         //         if (recvBuf[i + 9] >= 0x20 && recvBuf[i + 9] < 0x7f) {

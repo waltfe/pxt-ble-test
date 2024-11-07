@@ -234,10 +234,11 @@ namespace BluetoothInteraction {
         return [1];
     }
 
+    let distance_last = 0;
     /**
      * CMD = 0x02 
      * 读取超声波传检测到的距离
-     * @param msg[0] RJ11接口编号[1-2]
+     * @param msg[0] RJ11接口编号[1-4]
      * @return [1] 距离高8位
      * @return [0] 距离低8位
      * @return 返回距离(厘米)，0表示无障碍物，检测范围2-430cm
@@ -274,9 +275,22 @@ namespace BluetoothInteraction {
 
         // read pulse
         let d = pins.pulseIn(pinE, PulseValue.High, 25000)
+        let version = control.hardwareVersion()
         let distance = d * 34 / 2 / 1000
+        if (version == "1") {
+            distance = distance * 3 / 2
+        }
+
         if (distance > 430) {
             distance = 0
+        }
+
+        if (distance == 0) {
+            distance = distance_last
+            distance_last = 0
+        }
+        else {
+            distance_last = distance
         }
         distance = Math.floor(distance)
         return [(distance >> 8) & 0xFF, distance & 0xFF]  //cm

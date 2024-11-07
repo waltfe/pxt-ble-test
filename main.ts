@@ -639,19 +639,19 @@ namespace BluetoothInteraction {
      */
     function RFIDreadDataBlock(): number[] {
         //initialize
-        // serial.writeLine("AAAAAAA");
-        // if (NFC_ENABLE === 0) {
-        //     wakeup();
-        // }
-        // let checkCardResult = RFIDreadCheckCard();
-        // if (checkCardResult[0] === 0) {
-        //     serial.writeLine("No NFC Card!")
-        //     return [0]
-        // }
-        // if (!passwdCheck(uId, passwdBuf)) {
-        //     serial.writeLine("passwd error!")
-        //     return [1];
-        // }
+        serial.writeLine("AAAAAAA");
+        if (NFC_ENABLE === 0) {
+            wakeup();
+        }
+        let checkCardResult = RFIDreadCheckCard();
+        if (checkCardResult[0] === 0) {
+            serial.writeLine("No NFC Card!")
+            return [0]
+        }
+        if (!passwdCheck(uId, passwdBuf)) {
+            serial.writeLine("passwd error!")
+            return [1];
+        }
         // let cmdRead: number[] = []
         // cmdRead = [0x00, 0x00, 0xff, 0x05, 0xfb, 0xD4, 0x40, 0x01, 0x30, 0x07, 0xB4, 0x00];
         // let sum = 0, count = 0;

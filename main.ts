@@ -266,7 +266,6 @@ namespace BluetoothInteraction {
                 pinE = DigitalPin.P16
                 break;
         }
-        serial.writeLine("AAAAAAAAA")
         pins.setPull(pinT, PinPullMode.PullNone)
         pins.digitalWritePin(pinT, 0)
         control.waitMicros(2)
@@ -671,6 +670,7 @@ namespace BluetoothInteraction {
                 if (recvBuf[i + 9] >= 0x20 && recvBuf[i + 9] < 0x7f) {
                     ret[i] = recvBuf[i + 9] // valid ascii
                 }
+                serial.writeLine(String.fromCharCode(ret[i]));
             }
             return ret;
         }

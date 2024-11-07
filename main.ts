@@ -266,6 +266,7 @@ namespace BluetoothInteraction {
                 pinE = DigitalPin.P16
                 break;
         }
+        serial.writeLine("AAAAAAAAA")
         pins.setPull(pinT, PinPullMode.PullNone)
         pins.digitalWritePin(pinT, 0)
         control.waitMicros(2)

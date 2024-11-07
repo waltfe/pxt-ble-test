@@ -639,6 +639,7 @@ namespace BluetoothInteraction {
      */
     function RFIDreadDataBlock(): number[] {
         //initialize
+        serial.writeLine("AAAAAAA");
         if (NFC_ENABLE === 0) {
             wakeup();
         }

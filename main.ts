@@ -58,7 +58,7 @@ namespace BluetoothInteraction {
             case 2:
                 bleHeaderBuf[bleHeaderBufIndex++] = data;
                 if (bleHeaderBufIndex == 5) {
-                    bleMsgState = 3;
+                    bleMsgState = bleHeaderBuf[4] == 0 ? 4 : 3;
                 }
                 break;
             case 3:
@@ -682,19 +682,19 @@ namespace BluetoothInteraction {
      */
     function RFIDWriteData(msg: number[]): number[] {
         let data:Buffer = pins.createBuffer(16)
-        //initialize
-        for (let i = 0; i < msg.length; i++) {
-            data[i] = msg[i]
-        }
+        // //initialize
+        // for (let i = 0; i < msg.length; i++) {
+        //     data[i] = msg[i]
+        // }
 
-        let len = data.length
-        if (len > 16) {
-            len = 16
-        }
-        for (let i = 0; i < len; i++) {
-            blockData[i] = data[i];
-        }
-        writeblock(blockData);
+        // let len = data.length
+        // if (len > 16) {
+        //     len = 16
+        // }
+        // for (let i = 0; i < len; i++) {
+        //     blockData[i] = data[i];
+        // }
+        // writeblock(blockData);
         return [1]
     }
 

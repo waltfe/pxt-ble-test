@@ -668,7 +668,7 @@ namespace BluetoothInteraction {
         if ((recvBuf[6] === 0xD5) && (recvBuf[7] === 0x41) && (recvBuf[8] === 0x00) && (checkDcs(31 - 4))) {
             for (let i = 0; i < 16; i++) {
                 // if (recvBuf[i + 9] >= 0x20 && recvBuf[i + 9] < 0x7f) {
-                //     ret[i] = recvBuf[i + 9] // valid ascii
+                    ret[i] = recvBuf[i + 9] // valid ascii
                 // }
             }
             return ret;

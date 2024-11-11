@@ -671,7 +671,7 @@ namespace BluetoothInteraction {
                     ret[i] = recvBuf[i + 9] // valid ascii
                 }
             }
-            return ret;
+            //return ret;
         }
         return [2]
     }

@@ -14,7 +14,7 @@ namespace BluetoothInteraction {
     let bleMsgBufIndex: number = 0;
     let bleCommandHandle: { [key: number]: (param: number[]) => number[] } = {};
 
-    let timeout:number = 0
+    let timeout: number = 0
     let __temperature: number = 0
     let __humidity: number = 0
 
@@ -216,10 +216,9 @@ namespace BluetoothInteraction {
         let tempbuf = pins.createBufferFromArray(cmdWrite)
         writeAndReadBuf(tempbuf, 16);
         return 0;
-    } 
+    }
 
-    function waitDigitalReadPin(state: number, timeout: number, pin:DigitalPin)
-    {
+    function waitDigitalReadPin(state: number, timeout: number, pin: DigitalPin) {
         while (pins.digitalReadPin(pin) != state) {
             if (!(--timeout)) {
                 return 0
@@ -235,8 +234,9 @@ namespace BluetoothInteraction {
      * @param msg[1] led y坐标
      * @returns 返回0代表成功
      */
-    function ledToggle(msg: number[]): number[] {
-        led.toggle(msg[0], msg[1]);
+    function ledControl(msg: number[]): number[] {
+        if (msg[2] == 1) { led.plot(msg[0], msg[1]); }
+        else { led.unplot(0, 0); }
         return [0];
     }
 
@@ -300,8 +300,8 @@ namespace BluetoothInteraction {
             distance_last = distance
         }
         distance = Math.floor(distance)
-        let ret = (distance==0?1:0);
-        return [ret,(distance >> 8) & 0xFF, distance & 0xFF]  //cm
+        let ret = (distance == 0 ? 1 : 0);
+        return [ret, (distance >> 8) & 0xFF, distance & 0xFF]  //cm
     }
 
     /**
@@ -330,7 +330,7 @@ namespace BluetoothInteraction {
         }
 
         voltage = Math.round(Math.max(0, voltage))
-        return [0,(voltage >> 8) & 0xFF, voltage & 0xFF]  //lux
+        return [0, (voltage >> 8) & 0xFF, voltage & 0xFF]  //lux
     }
 
     /**
@@ -441,7 +441,7 @@ namespace BluetoothInteraction {
                 120
             )
         }
-        return [0,Math.round(noise)]
+        return [0, Math.round(noise)]
     }
 
     /**
@@ -462,7 +462,7 @@ namespace BluetoothInteraction {
             100
         );
         soilmoisture = 100 - voltage;
-        return [0,Math.round(soilmoisture)]
+        return [0, Math.round(soilmoisture)]
     }
 
     /**
@@ -475,13 +475,11 @@ namespace BluetoothInteraction {
      */
     function readDht11Sensor(msg: number[]): number[] {
         //initialize
-        if (input.runningTime() >= timeout)
-        {
+        if (input.runningTime() >= timeout) {
             timeout = input.runningTime() + 2000
         }
-        else
-        {
-            return [1,__temperature, __humidity]
+        else {
+            return [1, __temperature, __humidity]
         }
 
         let timeout_flag: number = 0
@@ -505,7 +503,7 @@ namespace BluetoothInteraction {
             case 4:
                 pin = DigitalPin.P16
                 break;
-         }
+        }
         let i: number = 0
         for (i = 0; i < 1; i++) {
             for (let index = 0; index < 40; index++) dataArray.push(false)
@@ -543,7 +541,7 @@ namespace BluetoothInteraction {
             checksum = resultArray[4]
             if (checksumTmp >= 512) checksumTmp -= 512
             if (checksumTmp >= 256) checksumTmp -= 256
-            if (checksumTmp == checksum){
+            if (checksumTmp == checksum) {
                 __temperature = resultArray[2] + resultArray[3] / 100
                 __humidity = resultArray[0] + resultArray[1] / 100
                 break;
@@ -554,7 +552,7 @@ namespace BluetoothInteraction {
             ret = 1
         else
             ret = 0
-        return [ret,__temperature, __humidity]
+        return [ret, __temperature, __humidity]
     }
 
     /**
@@ -581,7 +579,7 @@ namespace BluetoothInteraction {
                 pin = DigitalPin.P16
                 break;
         }
-        return [0,pins.digitalReadPin(pin) == 1? 1 : 0]
+        return [0, pins.digitalReadPin(pin) == 1 ? 1 : 0]
     }
 
     /**
@@ -616,7 +614,7 @@ namespace BluetoothInteraction {
         }
         pins.setPull(pinC, PinPullMode.PullUp)
         pins.setPull(pinD, PinPullMode.PullUp)
-        return [0,pins.digitalReadPin(pinC), pins.digitalReadPin(pinD)] 
+        return [0, pins.digitalReadPin(pinC), pins.digitalReadPin(pinD)]
     }
 
     /**
@@ -683,11 +681,11 @@ namespace BluetoothInteraction {
         cmdRead[cmdRead.length - 2] = 0xff - sum & 0xff;
         let buf = pins.createBufferFromArray(cmdRead)
         writeAndReadBuf(buf, 31);
-        let ret: number[] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+        let ret: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         if ((recvBuf[6] === 0xD5) && (recvBuf[7] === 0x41) && (recvBuf[8] === 0x00) && (checkDcs(31 - 4))) {
             for (let i = 0; i < 16; i++) {
                 if (recvBuf[i + 9] >= 0x20 && recvBuf[i + 9] < 0x7f) {
-                    ret[i+1] = recvBuf[i + 9] // valid ascii
+                    ret[i + 1] = recvBuf[i + 9] // valid ascii
                 }
             }
             return ret;
@@ -701,7 +699,7 @@ namespace BluetoothInteraction {
      * @return [0] 表示写入数据成功 [1] 表示写入数据失败
      */
     function RFIDWriteData(msg: number[]): number[] {
-        let data:Buffer = pins.createBuffer(16)
+        let data: Buffer = pins.createBuffer(16)
         //initialize
         for (let i = 0; i < msg.length; i++) {
             data[i] = msg[i]
@@ -791,13 +789,13 @@ namespace BluetoothInteraction {
                 }
             })
 
-            bleCommandHandle[0x01] = ledToggle;
+            bleCommandHandle[0x01] = ledControl;
             bleCommandHandle[0x02] = readUltrasonicSensor;
             bleCommandHandle[0x03] = readLightSensor;
             bleCommandHandle[0x04] = readNoiseSensor;
             bleCommandHandle[0x05] = readSoilHumiditySensor;
             bleCommandHandle[0x06] = readDht11Sensor;
-            bleCommandHandle[0x07] = readPIRSensor; 
+            bleCommandHandle[0x07] = readPIRSensor;
             bleCommandHandle[0x08] = readButtonCDSensor;
             bleCommandHandle[0x09] = RFIDreadCheckCard;
             bleCommandHandle[0x0A] = RFIDreadDataBlock;

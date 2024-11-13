@@ -190,9 +190,14 @@ namespace BluetoothInteraction {
         basic.pause(100);
     }
 
-    function writeblock(data: Buffer): void {
+    /**
+     * RFID 写数据块
+     * @param data 
+     * @returns 1: 写数据块失败，0: 写数据块成功
+     */
+    function writeblock(data: Buffer): number {
         if (!passwdCheck(uId, passwdBuf))
-            return;
+            return 1;
         let cmdWrite: number[] = [0x00, 0x00, 0xff, 0x15, 0xEB, 0xD4, 0x40, 0x01, 0xA0,
             0x06, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
             0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0xCD,
@@ -210,6 +215,7 @@ namespace BluetoothInteraction {
         cmdWrite[26] = 0xff - (sum & 0xff);
         let tempbuf = pins.createBufferFromArray(cmdWrite)
         writeAndReadBuf(tempbuf, 16);
+        return 0;
     } 
 
     function waitDigitalReadPin(state: number, timeout: number, pin:DigitalPin)
@@ -227,11 +233,11 @@ namespace BluetoothInteraction {
      * 翻转LED灯
      * @param msg[0] led x坐标
      * @param msg[1] led y坐标
-     * @returns 返回1代表成功
+     * @returns 返回0代表成功
      */
     function ledToggle(msg: number[]): number[] {
         led.toggle(msg[0], msg[1]);
-        return [1];
+        return [0];
     }
 
     let distance_last = 0;
@@ -239,8 +245,9 @@ namespace BluetoothInteraction {
      * CMD = 0x02 
      * 读取超声波传检测到的距离
      * @param msg[0] RJ11接口编号[1-4]
+     * @return [0] 返回0代表成功
      * @return [1] 距离高8位
-     * @return [0] 距离低8位
+     * @return [2] 距离低8位
      * @return 返回距离(厘米)，0表示无障碍物，检测范围2-430cm
      */
     function readUltrasonicSensor(msg: number[]): number[] {
@@ -293,15 +300,16 @@ namespace BluetoothInteraction {
             distance_last = distance
         }
         distance = Math.floor(distance)
-        return [(distance >> 8) & 0xFF, distance & 0xFF]  //cm
+        return [0,(distance >> 8) & 0xFF, distance & 0xFF]  //cm
     }
 
     /**
      * CMD = 0x03
      * 读取光线传感器数值
      * @param msg[0] RJ11接口编号[1-2]
-     * @return [1] 亮度值高8位
-     * @return [0] 亮度值低8位
+     * @return [0] 返回0代表成功
+     * @return [1] 光线值高8位
+     * @return [2] 光线值低8位
      * @return 亮度值(lux)
      */
     function readLightSensor(msg: number[]): number[] {
@@ -321,14 +329,15 @@ namespace BluetoothInteraction {
         }
 
         voltage = Math.round(Math.max(0, voltage))
-        return [(voltage >> 8) & 0xFF, voltage & 0xFF]  //lux
+        return [0,(voltage >> 8) & 0xFF, voltage & 0xFF]  //lux
     }
 
     /**
      * CMD = 0x04
      * 读取噪音传感器数值
      * @param msg[0] RJ11接口编号[1-2]
-     * @return [0] 噪音值 0-120
+     * @return [0] 返回0代表成功
+     * @return [1] 噪音值 0-120
      */
     function readNoiseSensor(msg: number[]): number[] {
         let pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
@@ -431,14 +440,15 @@ namespace BluetoothInteraction {
                 120
             )
         }
-        return [Math.round(noise)]
+        return [0,Math.round(noise)]
     }
 
     /**
      * CMD = 0x05
      * 读取土壤湿度传感器数值
      * @param msg[0] RJ11接口编号[1-2]
-     * @return [0] 土壤湿度值 0-100
+     * @return [0] 返回0代表成功
+     * @return [1] 土壤湿度值 0-100
      */
     function readSoilHumiditySensor(msg: number[]): number[] {
         let pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
@@ -451,15 +461,16 @@ namespace BluetoothInteraction {
             100
         );
         soilmoisture = 100 - voltage;
-        return [Math.round(soilmoisture)]
+        return [0,Math.round(soilmoisture)]
     }
 
     /**
      * CMD = 0x06
      * 读取温湿度传感器数值
      * @param msg[0] RJ11接口编号[1-4]
-     * @return [0] 温度值 -40~85
-     * @return [1] 湿度值 0-100
+     * @return [0] 返回0代表成功
+     * @return [1] 温度值 -40~85
+     * @return [2] 湿度值 0-100
      */
     function readDht11Sensor(msg: number[]): number[] {
         //initialize
@@ -469,7 +480,7 @@ namespace BluetoothInteraction {
         }
         else
         {
-            return [__temperature, __humidity]
+            return [1,__temperature, __humidity]
         }
 
         let timeout_flag: number = 0
@@ -537,14 +548,15 @@ namespace BluetoothInteraction {
                 break;
             }
         }
-        return [__temperature, __humidity]
+        return [0,__temperature, __humidity]
     }
 
     /**
      * CMD = 0x07
      * 读取PIR传感器数值
      * @param msg[0] RJ11接口编号[1-4]
-     * @return [0] 运动检测结果[1:检测到运动,0:未检测到运动]
+     * @return [0] 返回0代表成功
+     * @return [1] 运动检测结果[1:检测到运动,0:未检测到运动]
      */
     function readPIRSensor(msg: number[]): number[] {
         //initialize
@@ -563,15 +575,16 @@ namespace BluetoothInteraction {
                 pin = DigitalPin.P16
                 break;
         }
-        return [pins.digitalReadPin(pin) == 1? 1 : 0]
+        return [0,pins.digitalReadPin(pin) == 1? 1 : 0]
     }
 
     /**
      * CMD = 0x08
      * 读取按钮CD传感器数值
      * @param msg[0] RJ11接口编号[1-4]
-     * @return [0] 按钮C按下状态[0:按下,1:未按下] 
-     * @return [1] 按钮D按下状态[0:按下,1:未按下]
+     * @return [0] 返回0代表成功
+     * @return [1] 按钮C按下状态[0:按下,1:未按下] 
+     * @return [2] 按钮D按下状态[0:按下,1:未按下]
      */
     function readButtonCDSensor(msg: number[]): number[] {
         //initialize
@@ -597,13 +610,13 @@ namespace BluetoothInteraction {
         }
         pins.setPull(pinC, PinPullMode.PullUp)
         pins.setPull(pinD, PinPullMode.PullUp)
-        return [pins.digitalReadPin(pinC), pins.digitalReadPin(pinD)] 
+        return [0,pins.digitalReadPin(pinC), pins.digitalReadPin(pinD)] 
     }
 
     /**
      * CMD = 0x09
      * 读取RFID传感器是否检测到卡片
-     * @return [0] 检测到卡片[1:检测到卡片,0:未检测到卡片]
+     * @return [0] 检测到卡片[0:检测到卡片,1:未检测到卡片]
      */
     function RFIDreadCheckCard(): number[] {
         //initialize
@@ -616,26 +629,26 @@ namespace BluetoothInteraction {
         writeAndReadBuf(cmdUid, 24);
         for (let i = 0; i < 4; i++) {
             if (recvAck[1 + i] != ackBuf[i]) {
-                return [0];
+                return [1];
             }
         }
         if ((recvBuf[6] != 0xD5) || (!checkDcs(24 - 4))) {
-            return [0];
+            return [1];
         }
         for (let i = 0; i < uId.length; i++) {
             uId[i] = recvBuf[14 + i];
         }
         if (uId[0] === uId[1] && uId[1] === uId[2] && uId[2] === uId[3] && uId[3] === 0xFF) {
-            return [0];
+            return [1];
         }
-        return [1];
+        return [0];
     }
 
     /**
      * CMD = 0x0A
      * 读取RFID传感器检测到的卡片的数据
-     * @return [0] and lenth等于1 0:未找到NFC卡,1:密码错误,2:读取失败
-     * @return [0-15] and lenth等于16 读取到的数据
+     * @return [1] 1:未找到NFC卡,2:密码错误,3:读取失败
+     * @return [0-16] 读取成功位0 + 读取到的数据
      */
     function RFIDreadDataBlock(): number[] {
         //initialize
@@ -645,11 +658,11 @@ namespace BluetoothInteraction {
         let checkCardResult = RFIDreadCheckCard();
         if (checkCardResult[0] === 0) {
             serial.writeLine("No NFC Card!")
-            return [0]
+            return [1]
         }
         if (!passwdCheck(uId, passwdBuf)) {
             serial.writeLine("passwd error!")
-            return [1];
+            return [2];
         }
         let cmdRead: number[] = []
         cmdRead = [0x00, 0x00, 0xff, 0x05, 0xfb, 0xD4, 0x40, 0x01, 0x30, 0x07, 0xB4, 0x00];
@@ -664,21 +677,22 @@ namespace BluetoothInteraction {
         cmdRead[cmdRead.length - 2] = 0xff - sum & 0xff;
         let buf = pins.createBufferFromArray(cmdRead)
         writeAndReadBuf(buf, 31);
-        let ret: number[] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+        let ret: number[] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
         if ((recvBuf[6] === 0xD5) && (recvBuf[7] === 0x41) && (recvBuf[8] === 0x00) && (checkDcs(31 - 4))) {
             for (let i = 0; i < 16; i++) {
                 if (recvBuf[i + 9] >= 0x20 && recvBuf[i + 9] < 0x7f) {
-                    ret[i] = recvBuf[i + 9] // valid ascii
+                    ret[i+1] = recvBuf[i + 9] // valid ascii
                 }
             }
             return ret;
         }
-        return [2]
+        return [3]
     }
 
     /**
      * CMD = 0x0B
      * 读取RFID传感器检测到的卡片的数据
+     * @return [0] 表示写入数据成功 [1] 表示写入数据失败
      */
     function RFIDWriteData(msg: number[]): number[] {
         let data:Buffer = pins.createBuffer(16)
@@ -694,15 +708,15 @@ namespace BluetoothInteraction {
         for (let i = 0; i < len; i++) {
             blockData[i] = data[i];
         }
-        writeblock(blockData);
-        return [1]
+        let ret = writeblock(blockData);
+        return [ret]
     }
 
     /**
      * CMD = 0x99
      * 语音控制演示功能
      * @param msg[0] 控制指令
-     * @returns 返回1代表成功
+     * @returns 返回0代表成功
      */
     function audioControl(msg: number[]): number[] {
         let buf = pins.createBuffer(8)
@@ -739,7 +753,7 @@ namespace BluetoothInteraction {
                 pins.analogWritePin(AnalogPin.P2, 0)
                 break;
         }
-        return [1];
+        return [0];
     }
 
 

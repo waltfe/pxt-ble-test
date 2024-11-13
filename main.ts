@@ -236,7 +236,7 @@ namespace BluetoothInteraction {
      */
     function ledControl(msg: number[]): number[] {
         if (msg[2] == 1) { led.plot(msg[0], msg[1]); }
-        else { led.unplot(0, 0); }
+        else { led.unplot(msg[0], msg[1]); }
         return [0];
     }
 

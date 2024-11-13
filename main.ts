@@ -300,7 +300,8 @@ namespace BluetoothInteraction {
             distance_last = distance
         }
         distance = Math.floor(distance)
-        return [0,(distance >> 8) & 0xFF, distance & 0xFF]  //cm
+        let ret = (distance==0?1:0);
+        return [ret,(distance >> 8) & 0xFF, distance & 0xFF]  //cm
     }
 
     /**

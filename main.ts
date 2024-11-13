@@ -788,6 +788,7 @@ namespace BluetoothInteraction {
                     }
                 }
             })
+            bluetooth.startButtonService();
 
             bleCommandHandle[0x01] = ledControl;
             bleCommandHandle[0x02] = readUltrasonicSensor;

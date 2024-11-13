@@ -549,7 +549,12 @@ namespace BluetoothInteraction {
                 break;
             }
         }
-        return [0,__temperature, __humidity]
+        let ret = 0;
+        if (__temperature == 0 && __humidity == 0)
+            ret = 1
+        else
+            ret = 0
+        return [ret,__temperature, __humidity]
     }
 
     /**

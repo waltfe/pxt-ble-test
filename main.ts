@@ -662,7 +662,7 @@ namespace BluetoothInteraction {
             wakeup();
         }
         let checkCardResult = RFIDreadCheckCard();
-        if (checkCardResult[0] === 0) {
+        if (checkCardResult[0] === 1) {
             serial.writeLine("No NFC Card!")
             return [1]
         }

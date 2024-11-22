@@ -456,8 +456,8 @@ namespace BluetoothInteraction {
         let voltage = 0, soilmoisture = 0;
         voltage = pins.map(
             pins.analogReadPin(pin),
-            0,
-            1023,
+            50,
+            600,
             0,
             100
         );

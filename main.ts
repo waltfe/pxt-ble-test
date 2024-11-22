@@ -479,7 +479,7 @@ namespace BluetoothInteraction {
             timeout = input.runningTime() + 2000
         }
         else {
-            return [1, __temperature, __humidity]
+            return [0, __temperature, __humidity]
         }
 
         let timeout_flag: number = 0

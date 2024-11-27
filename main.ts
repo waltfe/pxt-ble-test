@@ -14,7 +14,7 @@ namespace BluetoothInteraction {
     let bleMsgBufIndex: number = 0;
     let bleCommandHandle: { [key: number]: (param: number[]) => number[] } = {};
 
-    let timeout: number = 0
+    let __dht11_last_read_time = 0;
     let __temperature: number = 0
     let __humidity: number = 0
 
@@ -465,6 +465,12 @@ namespace BluetoothInteraction {
         return [0, Math.round(soilmoisture)]
     }
 
+    function delay_us(us: number){
+        // control.waitMicros(us)
+        let time = input.runningTimeMicros() + us;
+        while(input.runningTimeMicros() < time);
+    }
+    
     /**
      * CMD = 0x06
      * 读取温湿度传感器数值
@@ -474,21 +480,10 @@ namespace BluetoothInteraction {
      * @return [2] 湿度值 0-100
      */
     function readDht11Sensor(msg: number[]): number[] {
-        //initialize
-        if (input.runningTime() >= timeout) {
-            timeout = input.runningTime() + 2000
-        }
-        else {
+        if (__dht11_last_read_time != 0 && __dht11_last_read_time + 1000 > input.runningTime()){
             return [0, __temperature, __humidity]
         }
-
-        let timeout_flag: number = 0
-        let _temperature: number = -999.0
-        let _humidity: number = -999.0
-        let checksum: number = 0
-        let checksumTmp: number = 0
-        let dataArray: boolean[] = []
-        let resultArray: number[] = []
+        let fail_flag: number = 0
         let pin = DigitalPin.P1
         switch (msg[0]) {
             case 1:
@@ -504,49 +499,60 @@ namespace BluetoothInteraction {
                 pin = DigitalPin.P16
                 break;
         }
-        let i: number = 0
-        for (i = 0; i < 1; i++) {
-            for (let index = 0; index < 40; index++) dataArray.push(false)
-            for (let index = 0; index < 5; index++) resultArray.push(0)
-            pins.setPull(pin, PinPullMode.PullUp)
-            pins.digitalWritePin(pin, 0) //begin protocol, pull down pin
+        pins.setPull(pin, PinPullMode.PullUp)
+        for (let count = 0; count < (__dht11_last_read_time == 0 ? 50 : 10); count++) {
+            if(count != 0){
+                basic.pause(5);
+            }
+            fail_flag = 0;
+            // 拉高1us后拉低代表重置
+            pins.digitalWritePin(pin, 1)
+            delay_us(1)
+            pins.digitalWritePin(pin, 0)
             basic.pause(18)
+            // 等待18ms后拉高代表开始
             pins.digitalWritePin(pin, 1) //pull up pin for 18us
-            pins.digitalReadPin(pin) //pull up pin
-            control.waitMicros(40)
+            delay_us(30)
+            pins.digitalReadPin(pin);
             if (!(waitDigitalReadPin(1, 9999, pin))) continue;
             if (!(waitDigitalReadPin(0, 9999, pin))) continue;
             //read data (5 bytes)
-
-            for (let index = 0; index < 40; index++) {
-                if (!(waitDigitalReadPin(0, 9999, pin))) {
-                    timeout_flag = 1
-                    break;
+            let data_arr = [0, 0, 0, 0, 0];
+            let i,j;
+            for( i = 0; i < 5; i++){
+                for ( j = 0; j < 8; j++) {
+                    if (!(waitDigitalReadPin(0, 9999, pin))) {
+                        fail_flag = 1
+                        break;
+                    }
+                    if (!(waitDigitalReadPin(1, 9999, pin))) {
+                        fail_flag = 1
+                        break;
+                    }
+                    delay_us(40)
+                    //if sensor still pull up data pin after 28 us it means 1, otherwise 0
+                    if (pins.digitalReadPin(pin) == 1) {
+                        data_arr[i] |= 1 << (7 - j)
+                    }
                 }
-                if (!(waitDigitalReadPin(1, 9999, pin))) {
-                    timeout_flag = 1
-                    break;
-                }
-                control.waitMicros(40)
-                //if sensor still pull up data pin after 28 us it means 1, otherwise 0
-                if (pins.digitalReadPin(pin) == 1) dataArray[index] = true
+                if (fail_flag) break;
             }
+            if (fail_flag) {
+                continue;
+            };
 
-            //convert byte number array to integer
-            for (let index = 0; index < 5; index++)
-                for (let index2 = 0; index2 < 8; index2++)
-                    if (dataArray[8 * index + index2]) resultArray[index] += 2 ** (7 - index2)
-            //verify checksum
-            checksumTmp = resultArray[0] + resultArray[1] + resultArray[2] + resultArray[3]
-            checksum = resultArray[4]
-            if (checksumTmp >= 512) checksumTmp -= 512
-            if (checksumTmp >= 256) checksumTmp -= 256
-            if (checksumTmp == checksum) {
-                __temperature = resultArray[2] + resultArray[3] / 100
-                __humidity = resultArray[0] + resultArray[1] / 100
+            if (data_arr[4] == ((data_arr[0] + data_arr[1] + data_arr[2] + data_arr[3]) & 0xFF)) {
+                __temperature = data_arr[2] + data_arr[3] / 100
+                __humidity = data_arr[0] + data_arr[1] / 100
+                __dht11_last_read_time = input.runningTime();
                 break;
             }
+            fail_flag = 1;
         }
+        if (fail_flag && __dht11_last_read_time == 0){
+            return [1, 0, 0];
+        }
+        
         return [0, __temperature, __humidity]
     }
 

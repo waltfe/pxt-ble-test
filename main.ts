@@ -109,7 +109,7 @@ namespace BluetoothInteraction {
     }
 
     function handleBleCommand(id: number, code: number, msg: number[]) {
-        if (bleCommandHandle[code] != undefined) {
+        if (bleCommandHandle[code & 0x7FFF] != undefined) {
             let ret = bleCommandHandle[code & 0x7FFF](msg, (code & 0x8000) ? 1 : 0);
             if (ret != undefined) {
                 sendBleResult(id, code, ret);

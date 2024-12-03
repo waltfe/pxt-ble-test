@@ -12,7 +12,7 @@ namespace BluetoothInteraction {
     let bleHeaderBufIndex: number = 0;
     let bleMsgBuf: number[] = [];
     let bleMsgBufIndex: number = 0;
-    let bleCommandHandle: { [key: number]: (param: number[], mode: number) => number[] } = {};
+    let bleCommandHandle: { [key: number]: (param: number[]) => number[] } = {};
     
     let __dht11_last_read_time = 0;
     let __temperature: number = 0
@@ -109,8 +109,8 @@ namespace BluetoothInteraction {
     }
 
     function handleBleCommand(id: number, code: number, msg: number[]) {
-        if (bleCommandHandle[code & 0x7FFF] != undefined) {
-            let ret = bleCommandHandle[code & 0x7FFF](msg, (code & 0x8000) ? 1 : 0);
+        if (bleCommandHandle[code] != undefined) {
+            let ret = bleCommandHandle[code](msg);
             if (ret != undefined) {
                 sendBleResult(id, code, ret);
             }
@@ -274,12 +274,12 @@ namespace BluetoothInteraction {
      * @return [2] 距离低8位
      * @return 返回距离(厘米)，0表示无障碍物，检测范围2-430cm
      */
-    function readUltrasonicSensor(msg: number[],mode:number): number[] {
+    function readUltrasonicSensor(msg: number[]): number[] {
 
         let Rjpin = msg[0];
         let pinT = DigitalPin.P1
         let pinE = DigitalPin.P2
-        if (mode == 0) {
+        if (msg.length == 1) {
             switch (Rjpin) {
                 case 1:
                     pinT = DigitalPin.P1

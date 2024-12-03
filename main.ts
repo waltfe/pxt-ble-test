@@ -12,8 +12,8 @@ namespace BluetoothInteraction {
     let bleHeaderBufIndex: number = 0;
     let bleMsgBuf: number[] = [];
     let bleMsgBufIndex: number = 0;
-    let bleCommandHandle: { [key: number]: (param: number[]) => number[] } = {};
-
+    let bleCommandHandle: { [key: number]: (param: number[], mode: number) => number[] } = {};
+    
     let __dht11_last_read_time = 0;
     let __temperature: number = 0
     let __humidity: number = 0
@@ -110,7 +110,7 @@ namespace BluetoothInteraction {
 
     function handleBleCommand(id: number, code: number, msg: number[]) {
         if (bleCommandHandle[code] != undefined) {
-            let ret = bleCommandHandle[code](msg);
+            let ret = bleCommandHandle[code & 0x7FFF](msg, (code & 0x8000) ? 1 : 0);
             if (ret != undefined) {
                 sendBleResult(id, code, ret);
             }
@@ -227,6 +227,28 @@ namespace BluetoothInteraction {
         return 1
     }
 
+    function rtn_pin(pin:number):number
+    {
+        switch (pin) {
+            case 1: return DigitalPin.P1; break;
+            case 2: return DigitalPin.P2; break;
+            case 3: return DigitalPin.P3; break;
+            case 4: return DigitalPin.P4; break;
+            case 5: return DigitalPin.P5; break;
+            case 6: return DigitalPin.P6; break;
+            case 7: return DigitalPin.P7; break;
+            case 8: return DigitalPin.P8; break;
+            case 9: return DigitalPin.P9; break;
+            case 10: return DigitalPin.P10; break;
+            case 11: return DigitalPin.P11; break;
+            case 12: return DigitalPin.P12; break;
+            case 13: return DigitalPin.P13; break;
+            case 14: return DigitalPin.P14; break;
+            case 15: return DigitalPin.P15; break;
+            case 16: return DigitalPin.P16; break;
+        }
+    }
+
     /**
      * CMD = 0x01
      * 翻转LED灯
@@ -250,28 +272,35 @@ namespace BluetoothInteraction {
      * @return [2] 距离低8位
      * @return 返回距离(厘米)，0表示无障碍物，检测范围2-430cm
      */
-    function readUltrasonicSensor(msg: number[]): number[] {
+    function readUltrasonicSensor(msg: number[],mode:number): number[] {
 
         let Rjpin = msg[0];
         let pinT = DigitalPin.P1
         let pinE = DigitalPin.P2
-        switch (Rjpin) {
-            case 1:
-                pinT = DigitalPin.P1
-                pinE = DigitalPin.P8
-                break;
-            case 2:
-                pinT = DigitalPin.P2
-                pinE = DigitalPin.P12
-                break;
-            case 3:
-                pinT = DigitalPin.P13
-                pinE = DigitalPin.P14
-                break;
-            case 4:
-                pinT = DigitalPin.P15
-                pinE = DigitalPin.P16
-                break;
+        if (mode == 0) {
+            switch (Rjpin) {
+                case 1:
+                    pinT = DigitalPin.P1
+                    pinE = DigitalPin.P8
+                    break;
+                case 2:
+                    pinT = DigitalPin.P2
+                    pinE = DigitalPin.P12
+                    break;
+                case 3:
+                    pinT = DigitalPin.P13
+                    pinE = DigitalPin.P14
+                    break;
+                case 4:
+                    pinT = DigitalPin.P15
+                    pinE = DigitalPin.P16
+                    break;
+            }
+        }
+        else
+        {
+            pinT = rtn_pin(msg[0])
+            pinE = rtn_pin(msg[1])
         }
         pins.setPull(pinT, PinPullMode.PullNone)
         pins.digitalWritePin(pinT, 0)

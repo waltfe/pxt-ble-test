@@ -247,6 +247,7 @@ namespace BluetoothInteraction {
             case 15: return DigitalPin.P15; break;
             case 16: return DigitalPin.P16; break;
         }
+        return DigitalPin.P1;
     }
 
     /**

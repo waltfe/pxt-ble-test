@@ -48,7 +48,7 @@ namespace BluetoothInteraction {
                     bleMsgBufIndex = 0;
                     bleHeaderBufIndex = 0;
                     bleMsgState = 1;
-                    bleMsgBuf.length = 0;
+                    bleMsgBuf = [];
                 }
                 break;
             case 1:

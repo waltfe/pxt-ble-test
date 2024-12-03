@@ -280,6 +280,7 @@ namespace BluetoothInteraction {
         let pinT = DigitalPin.P1
         let pinE = DigitalPin.P2
         serial.writeNumber(msg.length);
+        serial.writeLine("readUltrasonicSensor")
         if (msg.length == 1) {
             switch (Rjpin) {
                 case 1:

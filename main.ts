@@ -230,6 +230,7 @@ namespace BluetoothInteraction {
     function rtn_pin(pin:number):number
     {
         switch (pin) {
+            case 0: return DigitalPin.P0; break;
             case 1: return DigitalPin.P1; break;
             case 2: return DigitalPin.P2; break;
             case 3: return DigitalPin.P3; break;

@@ -280,8 +280,6 @@ namespace BluetoothInteraction {
         let Rjpin = msg[0];
         let pinT = DigitalPin.P1
         let pinE = DigitalPin.P2
-        serial.writeNumber(msg.length);
-        serial.writeLine("readUltrasonicSensor")
         if (msg.length == 1) {
             switch (Rjpin) {
                 case 1:
@@ -349,6 +347,8 @@ namespace BluetoothInteraction {
      */
     function readLightSensor(msg: number[]): number[] {
         let pin = AnalogPin.P1;
+        serial.writeNumber(msg.length);
+        serial.writeLine("readUltrasonicSensor")
         if (msg.length == 1) {
             (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
         }

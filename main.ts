@@ -347,12 +347,12 @@ namespace BluetoothInteraction {
      */
     function readLightSensor(msg: number[]): number[] {
         let pin = AnalogPin.P1;
-        serial.writeNumber(msg.length);
-        serial.writeLine("msg.length")
-        serial.writeNumber(msg[0]);
-        serial.writeLine("value")
+        // serial.writeNumber(msg.length);
+        // serial.writeLine("msg.length")
+        // serial.writeNumber(msg[0]);
+        // serial.writeLine("value")
         if (msg.length == 1) {
-            (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
+            pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
         }
         else {
             pin = rtn_pin(msg[1])
@@ -386,7 +386,7 @@ namespace BluetoothInteraction {
     function readNoiseSensor(msg: number[]): number[] {
         let pin = AnalogPin.P1;
         if (msg.length == 1) {
-            (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
+            pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
         }
         else {
             pin = rtn_pin(msg[1])
@@ -503,7 +503,7 @@ namespace BluetoothInteraction {
     function readSoilHumiditySensor(msg: number[]): number[] {
         let pin = AnalogPin.P1;
         if (msg.length == 1) {
-            (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
+            pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
         }
         else {
             pin = rtn_pin(msg[1])

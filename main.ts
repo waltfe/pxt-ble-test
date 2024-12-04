@@ -348,7 +348,14 @@ namespace BluetoothInteraction {
      * @return 亮度值(lux)
      */
     function readLightSensor(msg: number[]): number[] {
-        let pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
+        let pin = AnalogPin.P1;
+        if (msg.length == 1) {
+            (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
+        }
+        else {
+            pin = rtn_pin(msg[1])
+        }
+
         let voltage = 0;
         for (let index = 0; index < 200; index++) {
             voltage = voltage + pins.analogReadPin(pin)
@@ -375,7 +382,13 @@ namespace BluetoothInteraction {
      * @return [1] 噪音值 0-120
      */
     function readNoiseSensor(msg: number[]): number[] {
-        let pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
+        let pin = AnalogPin.P1;
+        if (msg.length == 1) {
+            (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
+        }
+        else {
+            pin = rtn_pin(msg[1])
+        }
         let level = 0, voltage = 0, noise = 0, h = 0, l = 0, sumh = 0, suml = 0
         for (let i = 0; i < 1000; i++) {
             level = level + pins.analogReadPin(pin)
@@ -486,7 +499,13 @@ namespace BluetoothInteraction {
      * @return [1] 土壤湿度值 0-100
      */
     function readSoilHumiditySensor(msg: number[]): number[] {
-        let pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
+        let pin = AnalogPin.P1;
+        if (msg.length == 1) {
+            (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
+        }
+        else {
+            pin = rtn_pin(msg[1])
+        }
         let voltage = 0, soilmoisture = 0;
         voltage = pins.map(
             pins.analogReadPin(pin),

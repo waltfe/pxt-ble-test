@@ -348,7 +348,9 @@ namespace BluetoothInteraction {
     function readLightSensor(msg: number[]): number[] {
         let pin = AnalogPin.P1;
         serial.writeNumber(msg.length);
-        serial.writeLine("readUltrasonicSensor")
+        serial.writeLine("msg.length")
+        serial.writeNumber(msg[0]);
+        serial.writeLine("value")
         if (msg.length == 1) {
             (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
         }

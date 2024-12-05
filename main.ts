@@ -540,19 +540,24 @@ namespace BluetoothInteraction {
         }
         let fail_flag: number = 0
         let pin = DigitalPin.P1
-        switch (msg[0]) {
-            case 1:
-                pin = DigitalPin.P8
-                break;
-            case 2:
-                pin = DigitalPin.P12
-                break;
-            case 3:
-                pin = DigitalPin.P14
-                break;
-            case 4:
-                pin = DigitalPin.P16
-                break;
+        if (msg.length == 1) {
+            switch (msg[0]) {
+                case 1:
+                    pin = DigitalPin.P8
+                    break;
+                case 2:
+                    pin = DigitalPin.P12
+                    break;
+                case 3:
+                    pin = DigitalPin.P14
+                    break;
+                case 4:
+                    pin = DigitalPin.P16
+                    break;
+            }
+        }
+        else {
+            pin = rtn_pin(msg[1])
         }
         pins.setPull(pin, PinPullMode.PullUp)
         for (let count = 0; count < (__dht11_last_read_time == 0 ? 50 : 10); count++) {
@@ -621,19 +626,24 @@ namespace BluetoothInteraction {
     function readPIRSensor(msg: number[]): number[] {
         //initialize
         let pin = DigitalPin.P1
-        switch (msg[0]) {
-            case 1:
-                pin = DigitalPin.P8
-                break;
-            case 2:
-                pin = DigitalPin.P12
-                break;
-            case 3:
-                pin = DigitalPin.P14
-                break;
-            case 4:
-                pin = DigitalPin.P16
-                break;
+        if (msg.length == 1) {
+            switch (msg[0]) {
+                case 1:
+                    pin = DigitalPin.P8
+                    break;
+                case 2:
+                    pin = DigitalPin.P12
+                    break;
+                case 3:
+                    pin = DigitalPin.P14
+                    break;
+                case 4:
+                    pin = DigitalPin.P16
+                    break;
+            }
+        }
+        else {
+            pin = rtn_pin(msg[1])
         }
         return [0, pins.digitalReadPin(pin) == 1 ? 1 : 0]
     }
@@ -648,25 +658,33 @@ namespace BluetoothInteraction {
      */
     function readButtonCDSensor(msg: number[]): number[] {
         //initialize
+        let Rjpin = msg[0]
         let pinC = DigitalPin.P1
         let pinD = DigitalPin.P2
-        switch (msg[0]) {
-            case 1:
-                pinC = DigitalPin.P1
-                pinD = DigitalPin.P8
-                break;
-            case 2:
-                pinC = DigitalPin.P2
-                pinD = DigitalPin.P12
-                break;
-            case 3:
-                pinC = DigitalPin.P13
-                pinD = DigitalPin.P14
-                break;
-            case 4:
-                pinC = DigitalPin.P15
-                pinD = DigitalPin.P16
-                break;
+        if (msg.length == 1) {
+            switch (Rjpin) {
+                case 1:
+                    pinC = DigitalPin.P1
+                    pinD = DigitalPin.P8
+                    break;
+                case 2:
+                    pinC = DigitalPin.P2
+                    pinD = DigitalPin.P12
+                    break;
+                case 3:
+                    pinC = DigitalPin.P13
+                    pinD = DigitalPin.P14
+                    break;
+                case 4:
+                    pinC = DigitalPin.P15
+                    pinD = DigitalPin.P16
+                    break;
+            }
+        }
+        else
+        {
+            pinC = rtn_pin(msg[0])
+            pinD = rtn_pin(msg[1])
         }
         pins.setPull(pinC, PinPullMode.PullUp)
         pins.setPull(pinD, PinPullMode.PullUp)
@@ -676,10 +694,15 @@ namespace BluetoothInteraction {
     /**
      * CMD = 0x09
      * 读取RFID传感器是否检测到卡片
-     * @return [0] 检测到卡片[0:检测到卡片,1:未检测到卡片]
+     * @return [0] 检测到卡片[0:检测到卡片,1:未检测到卡片,2:引脚错误]
      */
-    function RFIDreadCheckCard(): number[] {
+    function RFIDreadCheckCard(msg: number[]): number[] {
         //initialize
+        //引脚判断是否为IIC引脚
+        if (msg.length == 2 && msg[0] != 19 && msg[1] != 20) {
+            return [4]
+        }
+
         if (NFC_ENABLE === 0) {
             wakeup();
         }
@@ -707,11 +730,16 @@ namespace BluetoothInteraction {
     /**
      * CMD = 0x0A
      * 读取RFID传感器检测到的卡片的数据
-     * @return [1] 1:未找到NFC卡,2:密码错误,3:读取失败
+     * @return [1] 1:未找到NFC卡,2:密码错误,3:读取失败,4:引脚错误
      * @return [0-16] 读取成功位0 + 读取到的数据
      */
-    function RFIDreadDataBlock(): number[] {
+    function RFIDreadDataBlock(msg:number[]): number[] {
         //initialize
+        //引脚判断是否为IIC引脚
+        if (msg.length == 2 && msg[0] != 19 && msg[1] != 20) {
+            return [4]
+        }
+        
         if (NFC_ENABLE === 0) {
             wakeup();
         }
@@ -755,8 +783,9 @@ namespace BluetoothInteraction {
      * @return [0] 表示写入数据成功 [1] 表示写入数据失败
      */
     function RFIDWriteData(msg: number[]): number[] {
-        let data: Buffer = pins.createBuffer(16)
         //initialize
+        let data: Buffer = pins.createBuffer(16)
+
         for (let i = 0; i < msg.length; i++) {
             data[i] = msg[i]
         }

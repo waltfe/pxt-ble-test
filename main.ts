@@ -791,8 +791,8 @@ namespace BluetoothInteraction {
             return [2]
         }
 
-        for (let i = 0; i < msg.length; i++) {
-            data[i] = msg[i]
+        for (let i = 0; i < msg.length-2; i++) {
+            data[i] = msg[i+2]
         }
 
         let len = data.length

@@ -379,7 +379,7 @@ namespace BluetoothInteraction {
             pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
         }
         else {
-            if (!(pin_judge_big(msg[1]))) {
+            if (!(pin_judge_little(msg[1]))) {
                 return [1]
             }
             pin = rtn_pin(msg[1])
@@ -416,7 +416,7 @@ namespace BluetoothInteraction {
             pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
         }
         else {
-            if (!(pin_judge_big(msg[1]))) {
+            if (!(pin_judge_little(msg[1]))) {
                 return [1]
             }
             pin = rtn_pin(msg[1])
@@ -536,7 +536,7 @@ namespace BluetoothInteraction {
             pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
         }
         else {
-            if (!(pin_judge_big(msg[1]))) {
+            if (!(pin_judge_little(msg[1]))) {
                 return [1]
             }
             pin = rtn_pin(msg[1])

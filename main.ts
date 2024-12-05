@@ -13,7 +13,7 @@ namespace BluetoothInteraction {
     let bleMsgBuf: number[] = [];
     let bleMsgBufIndex: number = 0;
     let bleCommandHandle: { [key: number]: (param: number[]) => number[] } = {};
-    
+
     let __dht11_last_read_time = 0;
     let __temperature: number = 0
     let __humidity: number = 0
@@ -228,8 +228,7 @@ namespace BluetoothInteraction {
         return 1
     }
 
-    function rtn_pin(pin:number):number
-    {
+    function rtn_pin(pin: number): number {
         switch (pin) {
             case 0: return DigitalPin.P0; break;
             case 1: return DigitalPin.P1; break;
@@ -300,8 +299,7 @@ namespace BluetoothInteraction {
                     break;
             }
         }
-        else
-        {
+        else {
             pinT = rtn_pin(msg[0])
             pinE = rtn_pin(msg[1])
         }
@@ -520,12 +518,12 @@ namespace BluetoothInteraction {
         return [0, Math.round(soilmoisture)]
     }
 
-    function delay_us(us: number){
+    function delay_us(us: number) {
         // control.waitMicros(us)
         let time = input.runningTimeMicros() + us;
-        while(input.runningTimeMicros() < time);
+        while (input.runningTimeMicros() < time);
     }
-    
+
     /**
      * CMD = 0x06
      * 读取温湿度传感器数值
@@ -535,7 +533,7 @@ namespace BluetoothInteraction {
      * @return [2] 湿度值 0-100
      */
     function readDht11Sensor(msg: number[]): number[] {
-        if (__dht11_last_read_time != 0 && __dht11_last_read_time + 1000 > input.runningTime()){
+        if (__dht11_last_read_time != 0 && __dht11_last_read_time + 1000 > input.runningTime()) {
             return [0, __temperature, __humidity]
         }
         let fail_flag: number = 0
@@ -561,7 +559,7 @@ namespace BluetoothInteraction {
         }
         pins.setPull(pin, PinPullMode.PullUp)
         for (let count = 0; count < (__dht11_last_read_time == 0 ? 50 : 10); count++) {
-            if(count != 0){
+            if (count != 0) {
                 basic.pause(5);
             }
             fail_flag = 0;
@@ -578,9 +576,9 @@ namespace BluetoothInteraction {
             if (!(waitDigitalReadPin(0, 9999, pin))) continue;
             //read data (5 bytes)
             let data_arr = [0, 0, 0, 0, 0];
-            let i,j;
-            for( i = 0; i < 5; i++){
-                for ( j = 0; j < 8; j++) {
+            let i, j;
+            for (i = 0; i < 5; i++) {
+                for (j = 0; j < 8; j++) {
                     if (!(waitDigitalReadPin(0, 9999, pin))) {
                         fail_flag = 1
                         break;
@@ -609,10 +607,10 @@ namespace BluetoothInteraction {
             }
             fail_flag = 1;
         }
-        if (fail_flag && __dht11_last_read_time == 0){
+        if (fail_flag && __dht11_last_read_time == 0) {
             return [1, 0, 0];
         }
-        
+
         return [0, __temperature, __humidity]
     }
 
@@ -681,8 +679,7 @@ namespace BluetoothInteraction {
                     break;
             }
         }
-        else
-        {
+        else {
             pinC = rtn_pin(msg[0])
             pinD = rtn_pin(msg[1])
         }
@@ -733,17 +730,17 @@ namespace BluetoothInteraction {
      * @return [1] 1:未找到NFC卡,2:密码错误,3:读取失败,4:引脚错误
      * @return [0-16] 读取成功位0 + 读取到的数据
      */
-    function RFIDreadDataBlock(msg:number[]): number[] {
+    function RFIDreadDataBlock(msg: number[]): number[] {
         //initialize
         //引脚判断是否为IIC引脚
         if (msg.length == 2 && (msg[0] != 19 || msg[1] != 20)) {
             return [4]
         }
-        
+
         if (NFC_ENABLE === 0) {
             wakeup();
         }
-        let checkCardResult = RFIDreadCheckCard([19,20]);
+        let checkCardResult = RFIDreadCheckCard([19, 20]);
         if (checkCardResult[0] === 1) {
             serial.writeLine("No NFC Card!")
             return [1]
@@ -789,10 +786,14 @@ namespace BluetoothInteraction {
         //引脚判断是否为IIC引脚
         if (msg.length == 18 && (msg[0] != 19 || msg[1] != 20)) {
             return [2]
-        }
-
-        for (let i = 0; i < msg.length-2; i++) {
-            data[i] = msg[i+2]
+        } else if (msg.length == 18 && (msg[0] == 19 || msg[1] == 20)) {
+            for (let i = 0; i < msg.length - 2; i++) {
+                data[i] = msg[i + 2]
+            }
+        } else {
+            for (let i = 0; i < msg.length; i++) {
+                data[i] = msg[i]
+            }
         }
 
         let len = data.length

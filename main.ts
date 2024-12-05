@@ -602,8 +602,8 @@ namespace BluetoothInteraction {
             };
 
             if (data_arr[4] == ((data_arr[0] + data_arr[1] + data_arr[2] + data_arr[3]) & 0xFF)) {
-                __temperature = data_arr[2] + data_arr[3] / 100
-                __humidity = data_arr[0] + data_arr[1] / 100
+                __temperature = data_arr[2] + data_arr[3] / 100 + 30;//加30为需求映射温度范围
+                __humidity = data_arr[0] + data_arr[1] / 100;
                 __dht11_last_read_time = input.runningTime();
                 break;
             }
@@ -780,11 +780,16 @@ namespace BluetoothInteraction {
     /**
      * CMD = 0x0B
      * 读取RFID传感器检测到的卡片的数据
-     * @return [0] 表示写入数据成功 [1] 表示写入数据失败
+     * @return [0] 表示写入数据成功 [1] 表示写入数据失败 [2] 引脚错误
      */
     function RFIDWriteData(msg: number[]): number[] {
         //initialize
         let data: Buffer = pins.createBuffer(16)
+
+        //引脚判断是否为IIC引脚
+        if (msg.length == 18 && (msg[0] != 19 || msg[1] != 20)) {
+            return [2]
+        }
 
         for (let i = 0; i < msg.length; i++) {
             data[i] = msg[i]

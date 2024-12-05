@@ -251,6 +251,29 @@ namespace BluetoothInteraction {
         return DigitalPin.P1;
     }
 
+    //判断引脚编号是否合理
+    function pin_judge_little(msg: number): boolean {
+        switch (msg) {
+            case 1: return true; break;
+            case 2: return true; break;
+            case 13: return true; break;
+            case 15: return true; break;
+            default: return false; break;
+        }
+        return false;
+    }
+    //判断引脚编号是否合理
+    function pin_judge_big(msg: number): boolean {
+        switch (msg) {
+            case 8: return true; break;
+            case 12: return true; break;
+            case 14: return true; break;
+            case 16: return true; break;
+            default: return false; break;
+        }
+        return false;
+    }
+
     /**
      * CMD = 0x01
      * 翻转LED灯
@@ -300,6 +323,9 @@ namespace BluetoothInteraction {
             }
         }
         else {
+            if (!(pin_judge_little(msg[0]) && pin_judge_big(msg[1]))) {
+                return [1]
+            }
             pinT = rtn_pin(msg[0])
             pinE = rtn_pin(msg[1])
         }
@@ -353,6 +379,9 @@ namespace BluetoothInteraction {
             pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
         }
         else {
+            if (!(pin_judge_big(msg[1]))) {
+                return [1]
+            }
             pin = rtn_pin(msg[1])
         }
 
@@ -387,6 +416,9 @@ namespace BluetoothInteraction {
             pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
         }
         else {
+            if (!(pin_judge_big(msg[1]))) {
+                return [1]
+            }
             pin = rtn_pin(msg[1])
         }
         let level = 0, voltage = 0, noise = 0, h = 0, l = 0, sumh = 0, suml = 0
@@ -504,6 +536,9 @@ namespace BluetoothInteraction {
             pin = (msg[0] == 1 ? AnalogPin.P1 : AnalogPin.P2)
         }
         else {
+            if (!(pin_judge_big(msg[1]))) {
+                return [1]
+            }
             pin = rtn_pin(msg[1])
         }
         let voltage = 0, soilmoisture = 0;
@@ -555,6 +590,9 @@ namespace BluetoothInteraction {
             }
         }
         else {
+            if (!(pin_judge_big(msg[1]))) {
+                return [1]
+            }
             pin = rtn_pin(msg[1])
         }
         pins.setPull(pin, PinPullMode.PullUp)
@@ -641,6 +679,9 @@ namespace BluetoothInteraction {
             }
         }
         else {
+            if (!(pin_judge_big(msg[1]))) {
+                return [1]
+            }
             pin = rtn_pin(msg[1])
         }
         return [0, pins.digitalReadPin(pin) == 1 ? 1 : 0]
@@ -680,6 +721,9 @@ namespace BluetoothInteraction {
             }
         }
         else {
+            if (!(pin_judge_little(msg[0]) && pin_judge_big(msg[1]))) {
+                return [1]
+            }
             pinC = rtn_pin(msg[0])
             pinD = rtn_pin(msg[1])
         }

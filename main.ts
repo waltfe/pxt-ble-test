@@ -699,8 +699,8 @@ namespace BluetoothInteraction {
     function RFIDreadCheckCard(msg: number[]): number[] {
         //initialize
         //引脚判断是否为IIC引脚
-        if (msg.length == 2 && msg[0] != 19 && msg[1] != 20) {
-            return [4]
+        if (msg.length == 2 && (msg[0] != 19 || msg[1] != 20)) {
+            return [2]
         }
 
         if (NFC_ENABLE === 0) {
@@ -736,14 +736,14 @@ namespace BluetoothInteraction {
     function RFIDreadDataBlock(msg:number[]): number[] {
         //initialize
         //引脚判断是否为IIC引脚
-        if (msg.length == 2 && msg[0] != 19 && msg[1] != 20) {
+        if (msg.length == 2 && (msg[0] != 19 || msg[1] != 20)) {
             return [4]
         }
         
         if (NFC_ENABLE === 0) {
             wakeup();
         }
-        let checkCardResult = RFIDreadCheckCard();
+        let checkCardResult = RFIDreadCheckCard([19,20]);
         if (checkCardResult[0] === 1) {
             serial.writeLine("No NFC Card!")
             return [1]

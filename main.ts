@@ -729,6 +729,10 @@ namespace BluetoothInteraction {
             if (msg[0] == 0) {
                 pinC = rtn_pin(msg[1])
                 pinD = rtn_pin(msg[1])
+            } else {
+                if (!(pin_judge_little(msg[0]) && pin_judge_big(msg[1]))) {
+                    return [1]
+                }
             }
         }
         pins.setPull(pinC, PinPullMode.PullUp)

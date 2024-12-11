@@ -726,23 +726,24 @@ namespace BluetoothInteraction {
             // }
             pinC = rtn_pin(msg[0])
             pinD = rtn_pin(msg[1])
+            if (msg[0] == 0) {
+                pinC = rtn_pin(msg[1])
+                pinD = rtn_pin(msg[1])
+            }
         }
         pins.setPull(pinC, PinPullMode.PullUp)
         pins.setPull(pinD, PinPullMode.PullUp)
 
         if (msg[0] == 0 && msg.length != 1) {
-            if (!pin_judge_big(msg[1]))
-            {
+            if (!(pin_judge_little(msg[1]) || pin_judge_big(msg[1]))) {
                 return [1]
             }
-            return [0, pins.digitalReadPin(pinD), 0]
-        }
-        else if (msg[1] == 0 && msg.length != 1) {
-            if (!pin_judge_little(msg[0]))
-            {
-                return [1]
+            else if (pin_judge_little(msg[1])) {
+                return [0, pins.digitalReadPin(pinC), 0]
             }
-            return [0, pins.digitalReadPin(pinC), 0]
+            else if (pin_judge_big(msg[1])) {
+                return [0, pins.digitalReadPin(pinD), 0]
+            }
         }
         return [0, pins.digitalReadPin(pinC), pins.digitalReadPin(pinD)]
     }

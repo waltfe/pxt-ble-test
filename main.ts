@@ -735,14 +735,14 @@ namespace BluetoothInteraction {
             {
                 return [1]
             }
-            // return [0, pins.digitalReadPin(pinD), 0]
+            return [0, pins.digitalReadPin(pinD), 0]
         }
         else if (msg[1] == 0 && msg.length != 1) {
             if (!pin_judge_big(msg[0]))
             {
                 return [1]
             }
-            // return [0, pins.digitalReadPin(pinC), 0]
+            return [0, pins.digitalReadPin(pinC), 0]
         }
         return [0, pins.digitalReadPin(pinC), pins.digitalReadPin(pinD)]
     }

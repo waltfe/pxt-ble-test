@@ -730,10 +730,18 @@ namespace BluetoothInteraction {
         pins.setPull(pinC, PinPullMode.PullUp)
         pins.setPull(pinD, PinPullMode.PullUp)
 
-        if (msg[0] == 0 && msg.length == 2) {
+        if (msg[0] == 0 && msg.length != 2) {
+            if (!pin_judge_big(msg[1]))
+            {
+                return [1]
+            }
             return [0, pins.digitalReadPin(pinD), 0]
         }
-        else if (msg[1] == 0 && msg.length == 2) {
+        else if (msg[1] == 0 && msg.length != 2) {
+            if (!pin_judge_big(msg[0]))
+            {
+                return [1]
+            }
             return [0, pins.digitalReadPin(pinC), 0]
         }
         return [0, pins.digitalReadPin(pinC), pins.digitalReadPin(pinD)]

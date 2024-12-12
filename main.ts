@@ -743,10 +743,10 @@ namespace BluetoothInteraction {
                 return [1]
             }
             else if (pin_judge_little(msg[1])) {
-                return [0, pins.digitalReadPin(pinC), 0]
+                return [0, pins.digitalReadPin(pinC), 1]
             }
             else if (pin_judge_big(msg[1])) {
-                return [0, 0, pins.digitalReadPin(pinD)]
+                return [0, 1, pins.digitalReadPin(pinD)]
             }
         }
         return [0, pins.digitalReadPin(pinC), pins.digitalReadPin(pinD)]
